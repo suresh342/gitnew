@@ -1,0 +1,23 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: connect-kubernetes-role
+  #namespace: connect-devops
+rules:
+- apiGroups: ["","apps","extensions"]
+  resources: ["deployments","pods","services","secrets","pods/log"]
+  verbs: ["get","list","watch","create","update","patch","delete"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: connect-kubernetes-rolebinding
+  #namespace: connect-devops
+subjects:
+- kind: ServiceAccount
+  name: connect-kubernetes
+  namespace: connect-devops
+roleRef:
+  kind: Role
+  name: connect-kubernetes-role
+  apiGroup: rbac.authorization.k8s.io

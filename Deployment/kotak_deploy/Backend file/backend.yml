@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-project
+  labels:
+    app: demo-project
+    type: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo-project
+  template:
+    metadata:
+      name: demo-project
+      labels:
+        app: demo-project
+        type: backend
+    spec:
+      # tolerations:
+      # - key: "app"
+      #   operator: "Equal"
+      #   value: "backend"
+      #   effect: "NoSchedule"
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: app
+      #           operator: In
+      #           values:
+      #           - backend
+      containers:
+        - image: "979213225527.dkr.ecr.ap-south-1.amazonaws.com/demo-project:latest"
+          name: demo-project
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "2Gi"
+            limits:
+              memory: "4Gi"
+          ports:
+            - name: live-port
+              containerPort: 8080
+              protocol: TCP
+          # readinessProbe:
+          #   httpGet:
+          #     path: /config/v2/p/health
+          #     port: live-port
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /config/v2/p/health
+          #     port: live-port
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 10
+          # env:
+          #   - name:
+          #     value:
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-project
+spec:
+  selector:
+    app: demo-project
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: live-port
+
+
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: demo-project-memory
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1beta1
+    kind: Deployment
+    name: demo-project
+  minReplicas: 2
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 75
